@@ -1,0 +1,8 @@
+---
+applications:
+- name: ticketing
+  memory: 64M
+  instances: 1
+  buildpack: https://github.com/cloudfoundry/staticfile-buildpack.git
+  host: ticketing
+  domain: cfapps.io

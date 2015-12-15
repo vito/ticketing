@@ -60,7 +60,7 @@ viewRepo repo =
 update : Action -> Model -> (Model, Effects.Effects Action)
 update action model =
   let
-    repoll = fetchRepos Time.minute
+    repoll = fetchRepos (5 * Time.minute)
   in
     case action of
       ReposFetched (Ok repos) ->

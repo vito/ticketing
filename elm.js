@@ -11742,7 +11742,7 @@ Elm.Ticketing.make = function (_elm) {
       return {ctor: "_Tuple2",_0: model,_1: fetchRepos(0)};
    }();
    var update = F2(function (action,model) {
-      var repoll = fetchRepos($Time.minute);
+      var repoll = fetchRepos(5 * $Time.minute);
       var _p2 = action;
       if (_p2._0.ctor === "Ok") {
             return {ctor: "_Tuple2"

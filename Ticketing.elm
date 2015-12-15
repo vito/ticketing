@@ -1,13 +1,13 @@
 module Ticketing where
 
-import Effects
 import Html
-import Html.Events exposing (onClick)
-import StartApp
-import Json.Decode exposing ((:=))
 import Http
+import Json.Decode exposing ((:=))
 import Task
 import Time
+
+import Effects
+import StartApp
 
 app = StartApp.start { init = init, view = view, update = update, inputs = [] }
 main = app.html

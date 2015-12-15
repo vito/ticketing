@@ -11770,18 +11770,9 @@ Elm.Ticketing.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
-   $Task = Elm.Task.make(_elm);
+   $Task = Elm.Task.make(_elm),
+   $Time = Elm.Time.make(_elm);
    var _op = {};
-   var update = F2(function (action,model) {
-      var _p0 = action;
-      if (_p0._0.ctor === "Ok") {
-            return {ctor: "_Tuple2"
-                   ,_0: _U.update(model,{repos: $Maybe.Just(_p0._0._0)})
-                   ,_1: $Effects.none};
-         } else {
-            return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         }
-   });
    var viewRepo = function (repo) {
       return _U.list([A2($Html.dt,
                      _U.list([]),
@@ -11794,9 +11785,9 @@ Elm.Ticketing.make = function (_elm) {
       return _U.cmp(repo.openIssues,0) > 0;
    };
    var view = F2(function (address,model) {
-      var _p1 = model.repos;
-      if (_p1.ctor === "Just") {
-            var _p2 = _p1._0;
+      var _p0 = model.repos;
+      if (_p0.ctor === "Just") {
+            var _p1 = _p0._0;
             return A2($Html.div,
             _U.list([]),
             _U.list([A2($Html.h1,
@@ -11806,11 +11797,11 @@ Elm.Ticketing.make = function (_elm) {
                     function (_) {
                        return _.openIssues;
                     },
-                    _p2))),
+                    _p1))),
                     " open issues"))]))
                     ,A2($Html.dl,
                     _U.list([]),
-                    A2($List.concatMap,viewRepo,A2($List.filter,hasIssues,_p2)))]));
+                    A2($List.concatMap,viewRepo,A2($List.filter,hasIssues,_p1)))]));
          } else {
             return $Html.text("Loading...");
          }
@@ -11825,15 +11816,30 @@ Elm.Ticketing.make = function (_elm) {
    Repo,
    A2($Json$Decode._op[":="],"name",$Json$Decode.string),
    A2($Json$Decode._op[":="],"open_issues",$Json$Decode.$int)));
-   var fetchRepos = $Effects.task(A2($Task.map,
-   ReposFetched,
-   $Task.toResult(A2($Http.get,
-   decodeRepos,
-   "https://api.github.com/orgs/concourse/repos"))));
+   var fetchRepos = function (delay) {
+      return $Effects.task(A2($Task.map,
+      ReposFetched,
+      $Task.toResult(A2($Task.andThen,
+      $Task.sleep(delay),
+      $Basics.always(A2($Http.get,
+      decodeRepos,
+      "https://api.github.com/orgs/concourse/repos"))))));
+   };
    var init = function () {
       var model = {repos: $Maybe.Nothing};
-      return {ctor: "_Tuple2",_0: model,_1: fetchRepos};
+      return {ctor: "_Tuple2",_0: model,_1: fetchRepos(0)};
    }();
+   var update = F2(function (action,model) {
+      var repoll = fetchRepos($Time.minute);
+      var _p2 = action;
+      if (_p2._0.ctor === "Ok") {
+            return {ctor: "_Tuple2"
+                   ,_0: _U.update(model,{repos: $Maybe.Just(_p2._0._0)})
+                   ,_1: repoll};
+         } else {
+            return {ctor: "_Tuple2",_0: model,_1: repoll};
+         }
+   });
    var Model = function (a) {    return {repos: a};};
    var app = $StartApp.start({init: init
                              ,view: view

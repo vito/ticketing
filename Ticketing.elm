@@ -7,6 +7,7 @@ import StartApp
 import Json.Decode exposing ((:=))
 import Http
 import Task
+import Time
 
 app = StartApp.start { init = init, view = view, update = update, inputs = [] }
 main = app.html
@@ -33,7 +34,7 @@ init =
       { repos = Nothing
       }
   in
-    (model, fetchRepos)
+    (model, fetchRepos 0)
 
 view : Signal.Address Action -> Model -> Html.Html
 view address model =
@@ -58,15 +59,18 @@ viewRepo repo =
 
 update : Action -> Model -> (Model, Effects.Effects Action)
 update action model =
-  case action of
-    ReposFetched (Ok repos) ->
-      ( { model | repos = Just repos } , Effects.none)
-    ReposFetched (Err err) ->
-      (model, Effects.none)
+  let
+    repoll = fetchRepos Time.minute
+  in
+    case action of
+      ReposFetched (Ok repos) ->
+        ( { model | repos = Just repos } , repoll)
+      ReposFetched (Err err) ->
+        (model, repoll)
 
-fetchRepos : Effects.Effects Action
-fetchRepos =
-  Http.get decodeRepos "https://api.github.com/orgs/concourse/repos"
+fetchRepos : Time.Time -> Effects.Effects Action
+fetchRepos delay =
+  Task.sleep delay `Task.andThen` (always <| Http.get decodeRepos "https://api.github.com/orgs/concourse/repos")
     |> Task.toResult
     |> Task.map ReposFetched
     |> Effects.task

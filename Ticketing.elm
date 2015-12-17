@@ -1,6 +1,7 @@
 module Ticketing where
 
 import Html
+import Html.Attributes exposing (class)
 import Http
 import Json.Decode exposing ((:=))
 import Pagination exposing (Paginated, Page)
@@ -47,27 +48,25 @@ view address model =
   case (model.repos, model.openPullRequests) of
     (Just repos, Just prCount) ->
       let
-        openIssues = List.sum <| List.map .openIssues repos
-        interestingRepos = List.filter hasIssues repos
-        header = (toString openIssues) ++ " open issues of which " ++ (toString prCount) ++ " are pull requests"
+        allIssues = List.sum <| List.map .openIssues repos
+        issueCount = allIssues - prCount
       in
-        Html.div []
-          [ Html.h1 []
-            [ Html.text header ]
-          , Html.dl [] (List.concatMap viewRepo <| interestingRepos)
+        Html.div [class "main"]
+          [ viewBox issueCount "issues"
+          , viewBox prCount "pull requests"
           ]
 
     (_, _) ->
       Html.text "Loading..."
 
-hasIssues : Repo -> Bool
-hasIssues repo = repo.openIssues > 0
-
-viewRepo : Repo -> List Html.Html
-viewRepo repo =
-  [ Html.dt [] [Html.text repo.name]
-  , Html.dd [] [Html.text (toString repo.openIssues)]
-  ]
+viewBox : Int -> String -> Html.Html
+viewBox count noun =
+  Html.div [class "box"]
+    [ Html.div [class "count"]
+      [ Html.text (toString count) ]
+    , Html.div [class "noun"]
+      [ Html.text noun ]
+    ]
 
 update : Action -> Model -> (Model, Effects.Effects Action)
 update action model =
